@@ -1,0 +1,168 @@
+//*************************************************************//
+//CODE FOR WADE 2.0
+#include <SoftwareSerial.h>
+// set the data rate for the SoftwareSerial port
+// creates a "virtual" serial port/UART
+// connect BT module TX to D10
+// connect BT module RX to D11
+// connect BT Vcc to 5V, GND to GND
+SoftwareSerial BT(9, 10);
+
+const int groundpin = A0;             // analog input pin 4 -- ground
+const int powerpin = A4;              // analog input pin 5 -- voltage
+const int xpin = A3;                  // x-axis
+const int ypin = A2;                  // y-axis
+const int zpin = A1;                  // z-axis
+const int tin = 12;
+const int ledb = 5;
+const int ledg = 4;
+const int ledgn = 3;
+const int ledr = 2;
+int tog = 1;
+int tpow = 13;
+int j;
+int tc = -5;
+int x, y, z;                          //X, Y & Z axis variables to store value
+
+void setup()
+{
+  BT.begin(9600);
+  // Send test message at 9600 rate
+  Serial.begin(9600);
+  pinMode(groundpin, OUTPUT);
+  pinMode(powerpin, OUTPUT);
+  pinMode(tpow, OUTPUT);
+  digitalWrite(tpow, HIGH);
+  digitalWrite(groundpin, LOW);
+  digitalWrite(powerpin, HIGH);
+  pinMode(tin, INPUT);
+  digitalWrite(tin, LOW);
+  tog = 0;
+  //LEDS::
+  pinMode(ledg, OUTPUT);
+  pinMode(ledb, OUTPUT);
+  pinMode(ledr, OUTPUT);
+  pinMode(ledgn, OUTPUT);
+  digitalWrite(ledgn, LOW);
+  digitalWrite(ledg, LOW);
+  digitalWrite(ledb, LOW);
+  digitalWrite(ledr, LOW);
+  //
+  Serial.println("//*********BEGIN********//");
+  BT.println("//*********BEGIN********//");
+  BT.println("Hello!!!");
+}
+void loop()
+{
+  j = digitalRead(tin);
+  if (tog == 1) {
+    digitalWrite(ledr, LOW);
+    digitalWrite(ledb, LOW);
+    if (j == 1)
+    {
+      delay(300);
+      if (j == 1) {
+        tog = 0;
+        Serial.println("TOUCH RECORDED");
+        BT.println("TOUCH RECORDED");
+        Serial.println("tog changed to 0");
+        BT.println("Input ends");
+        tc = 0;
+      }
+    }
+  }
+  else if (tog == 0) {
+    tc = tc + 1;
+    digitalWrite(ledg, LOW);
+    digitalWrite(ledb, LOW);
+    digitalWrite(ledr, HIGH);
+    if (j == 1)
+    {
+      delay(300);
+      if (j == 1) {
+        tog = 1;
+        Serial.println("TOUCH RECORDED");
+        BT.println("TOUCH RECORDED");
+        Serial.println("tog changed to 1");
+        BT.println("Begin Input");
+        digitalWrite(ledg, HIGH);
+      }
+    }
+  }
+  delay(400);
+  if (tog == 1)
+  {
+    //Calc Values:
+    x = analogRead(xpin);
+    y = analogRead(ypin);
+    z = analogRead(zpin);
+    /////To REAd sensor values:
+    //    Serial.print(analogRead(xpin));
+    //    Serial.print("\t");
+    //    Serial.print(analogRead(ypin));
+    //    Serial.print("\t");
+    //    Serial.print(analogRead(zpin));
+    //    Serial.println();
+    //    delay(200);
+
+
+
+    ////*** ADD pin nos to the following and change functions based on your needs.
+    if (y > 360 && y< 400)
+    {
+      //FORWARD
+      light();
+      Serial.println("Forward");
+      BT.println("FORWARD");
+
+    }
+    else if (y > 275 && y < 310)
+    {
+      //REVERSE
+      light();
+      Serial.println("Reverse");
+      BT.println("REVERSE");
+    }
+    else if (x < 325 && x> 285)
+    {
+      //LEFT
+      light();
+      Serial.println("Left");
+      BT.println("Left");
+    }
+    else if (x > 376 && x < 405)
+    {
+      //RIGHT
+      light();
+      Serial.println("Right");
+      BT.println("Right");
+    }
+    else
+    {
+      Serial.println("ZERO");
+      BT.println("ZERO");
+      digitalWrite(ledg, HIGH);
+      digitalWrite(ledb, LOW);
+    }
+  }
+  else if (tc > 5)
+  {
+    Serial.println("TOUCH TO ACTIVATE");
+    BT.println("TOUCH TO ACTIVATE");
+    digitalWrite(ledg, LOW);
+    digitalWrite(ledb, LOW);
+    digitalWrite(ledr, HIGH);
+    delay(200);
+    digitalWrite(ledr, LOW);
+    delay(200);
+    digitalWrite(ledr, HIGH);
+    tc = -5;
+  }
+  delay(200);
+}
+void light()
+{
+  digitalWrite(ledg, LOW);
+  digitalWrite(ledb, HIGH);
+  digitalWrite(ledr, LOW);
+}
